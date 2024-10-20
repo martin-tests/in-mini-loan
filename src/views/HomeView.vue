@@ -27,7 +27,7 @@
             <BaseSlider v-model="selectedLoanPeriodIdx" class="mt-4" label="Period" :min="loanPeriodIdxs[0]" :min-label="loanPeriodOptions[0].label" :max="loanPeriodIdxs[loanPeriodIdxs.length - 1]" :max-label="loanPeriodOptions[loanPeriodOptions.length -1].label" :step="1" />
           </div>
           <p class="mt-8 text-center text-base leading-24">Monthly payment</p>
-          <p class="mt-2 font-[Bitter] text-center text-32 leading-34 lg:text-68 lg:leading-72">{{ calculatedMonthlyPayment }}</p>
+          <p class="mt-2 font-[Bitter] text-center text-32 leading-34 lg:text-68 lg:leading-72">{{ formatNumberWithCurrency(calculatedMonthlyPayment) }}</p>
           <div class="my-8 text-center">
             <BaseButton @click="isFormVisible = true">Apply now</BaseButton>
           </div>
@@ -49,8 +49,10 @@
 
 <script setup lang="ts">
 import { computed,reactive, ref, watch, useTemplateRef } from 'vue';
+import type { ApplicationForm } from '@/types';
 import { useRouter } from 'vue-router';
-import { validateEmail } from '@/utils/helpers';
+import { useLoanStore } from '@/stores/loan';
+import { formatNumberWithCurrency, validateEmail } from '@/utils/helpers';
 import BaseButton from '@/components/inputs/BaseButton.vue';
 import BaseSlider from '@/components/inputs/InputSlider.vue';
 import InputSelect from '@/components/inputs/InputSelect.vue';
@@ -59,6 +61,7 @@ import BaseHeading from '@/components/BaseHeading.vue';
 import BaseModal from '@/components/modals/BaseModal.vue';
 
 const router = useRouter();
+const store = useLoanStore();
 
 const calculatorRef = useTemplateRef('calculatorRef');
 
@@ -78,20 +81,9 @@ const loanPeriodOptions = loanPeriods.map((month) => ({ value: month, label: `${
 const selectedLoanPeriodOption = ref(loanPeriodOptions[loanPeriodOptions.length - 1]);
 const loanPeriodIdxs = Array(loanPeriods.length).fill(0).map((_, idx) => idx);
 const selectedLoanPeriodIdx = ref(loanPeriodIdxs[loanPeriodIdxs.length - 1]);
-const calculatedMonthlyPayment = computed(() => {
-  const monthlyPayment = selectedLoanAmount.value / selectedLoanPeriod.value;
-  return monthlyPayment.toFixed(2) + ' €';
-});
+const calculatedMonthlyPayment = computed(() => selectedLoanAmount.value / selectedLoanPeriod.value);
 
 const isFormVisible = ref(false);
-
-interface ApplicationForm {
-  firstName: { value: string; error: string };
-  lastName: { value: string; error: string };
-  mobileNumber: { value: string; error: string };
-  email: { value: string; error: string };
-  monthlyIncome: { value: string; error: string };
-}
 
 const form = reactive<ApplicationForm>({
   firstName: { value: '', error: '' },
@@ -138,27 +130,17 @@ const onSubmitApplication = () => {
     return;
   }
   const isLoanApproved = determineLoanDecision(form);
+  store.setLoanDecision({
+    status: isLoanApproved ? 'approved' : 'rejected',
+    firstName: form.firstName.value,
+    loanAmount: selectedLoanAmount.value,
+    loanPeriod: selectedLoanPeriod.value,
+    monthlyPayment: calculatedMonthlyPayment.value
+  });
   if (isLoanApproved) {
-    router.push({ 
-      path: '/application-progress', 
-      state: {
-        applicationDetails: {
-          firstName: form.firstName.value,
-          loanAmount: selectedLoanAmount.value,
-          loanPeriod: selectedLoanPeriod.value,
-          monthlyPayment: calculatedMonthlyPayment.value
-        }
-      }
-    });
+    router.push('/application-progress');
   } else {
-    router.push({
-      path: '/application-feedback',
-      state: {
-        applicationDetails: {
-          firstName: form.firstName.value
-        }
-      }
-    });
+    router.push('/application-feedback');
   }
 };
 
@@ -185,5 +167,4 @@ watch(selectedLoanPeriodOption, (newVal) => {
   selectedLoanPeriod.value = newVal.value;
   selectedLoanPeriodIdx.value = loanPeriods.indexOf(newVal.value);
 });
-
 </script>
