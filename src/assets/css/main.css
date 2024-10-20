@@ -1,0 +1,27 @@
+@import 'webfonts';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-almost-white-lighter: #FBFBF9;
+  --color-plump-purple: #AA93FF;
+  --color-night-violet: #21093A;
+}
+
+body {
+  color: var(--color-night-violet);
+  background-color: var(--color-almost-white-lighter);
+}
+
+#app {
+  min-height: 100vh;
+}
+
+.squircle {
+  -webkit-mask-image: paint(squircle);
+  mask-image: paint(squircle);
+  --squircle-radius: 280px;
+  --squircle-smooth: 0.4;
+}

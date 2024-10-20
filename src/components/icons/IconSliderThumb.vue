@@ -1,0 +1,5 @@
+<template>
+  <svg width="22" height="12" viewBox="0 0 22 12" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M9 6L1 6" stroke="#21093A">
+    <path d="M6 1L1 6L6 11" stroke="#21093A" /><path d="M13 6L21 6" stroke="#21093A" /><path d="M16 1L21 6L16 11" stroke="#21093A" />
+  </path></svg>
+</template>
